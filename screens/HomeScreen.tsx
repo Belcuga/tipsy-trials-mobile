@@ -229,7 +229,7 @@ export default function HomeScreen() {
                             <View style={styles.playerCard}>
                                 <Text style={styles.playerName}>{item.name}</Text>
                                 <TouchableOpacity onPress={() => removePlayer(item.id)}>
-                                    <Ionicons name="copy-outline" size={20} color="#fff" />
+                                    <Ionicons name="trash-outline" size={20} color="#fff" />
                                 </TouchableOpacity>
                             </View>
                         )}
