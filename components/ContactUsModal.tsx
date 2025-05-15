@@ -1,5 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
+    Linking,
     Modal,
     StyleSheet,
     Text,
@@ -14,27 +17,48 @@ interface ContactUsModalProps {
 
 export default function ContactUsModal({ visible, onClose }: ContactUsModalProps) {
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>×</Text>
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={onClose}
+          >
+            <Ionicons name="close" size={24} color="#fff" />
+          </TouchableOpacity>
+          
+          <Text style={styles.modalTitle}>Contact Us</Text>
+          
+          <Text style={styles.modalText}>
+            Have suggestions or found a bug?
+          </Text>
+          
+          <Text style={styles.modalText}>
+            Feel free to reach out to us at:
+          </Text>
+
+          <TouchableOpacity 
+            onPress={() => Linking.openURL('mailto:tipsytrials@gmail.com')}
+          >
+            <Text style={[styles.modalText, styles.emailText]}>
+              tipsytrials@gmail.com
+            </Text>
           </TouchableOpacity>
 
-          <Text style={styles.title}>Contact Us</Text>
-
-          <Text style={styles.description}>
-            Have questions, feedback, or need support?
-          </Text>
-          <Text style={styles.description}>
-            Reach out to us at:
-          </Text>
-          <Text style={[styles.description, styles.email]}>
-            hello@tipsytrials.com
-          </Text>
-
-          <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
-            <Text style={styles.closeModalText}>Close</Text>
+          <TouchableOpacity onPress={onClose}>
+            <LinearGradient
+              colors={['#00F5A0', '#00D9F5']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>Got it!</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </View>
@@ -43,55 +67,54 @@ export default function ContactUsModal({ visible, onClose }: ContactUsModalProps
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  centeredView: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,50,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContainer: {
-    backgroundColor: '#0B4FB5',
-    padding: 20,
-    borderRadius: 12,
-    width: '85%',
+  modalView: {
+    backgroundColor: '#1a0b2e',
+    borderRadius: 20,
+    padding: 30,
     alignItems: 'center',
+    width: '85%',
+    maxWidth: 400,
   },
   closeButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    right: 15,
+    top: 15,
+    padding: 5,
   },
-  closeText: {
-    color: 'white',
+  modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  title: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  description: {
-    color: 'white',
-    fontSize: 14,
+    color: '#fff',
+    marginBottom: 20,
     textAlign: 'center',
-    marginBottom: 5,
   },
-  email: {
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
-  },
-  closeModalButton: {
-    backgroundColor: '#00FF00',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 15,
-  },
-  closeModalText: {
-    color: 'white',
-    fontWeight: 'bold',
+  modalText: {
     fontSize: 16,
+    color: '#fff',
+    marginBottom: 15,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  emailText: {
+    color: '#00F5A0',
+    textDecorationLine: 'underline',
+    marginBottom: 25,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

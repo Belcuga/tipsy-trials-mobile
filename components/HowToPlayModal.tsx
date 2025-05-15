@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
     Modal,
@@ -14,27 +16,44 @@ interface HowToPlayModalProps {
 
 export default function HowToPlayModal({ visible, onClose }: HowToPlayModalProps) {
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>×</Text>
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={onClose}
+          >
+            <Ionicons name="close" size={24} color="#fff" />
           </TouchableOpacity>
-
-          <Text style={styles.title}>How to Play</Text>
-
-          <Text style={styles.description}>
-            Add players and pick your game modes (Dirty, Challenges, etc.).
+          
+          <Text style={styles.modalTitle}>How to Play</Text>
+          
+          <Text style={styles.modalText}>
+            Add players and pick your game modes (Spicy, Challenges, etc.)
           </Text>
-          <Text style={styles.description}>
+          
+          <Text style={styles.modalText}>
             Then take turns completing fun or spicy challenges.
           </Text>
-          <Text style={styles.description}>
+          
+          <Text style={styles.modalText}>
             Keep playing as long as you want or until you get black out drunk. Have fun!
           </Text>
 
-          <TouchableOpacity style={styles.gotItButton} onPress={onClose}>
-            <Text style={styles.gotItText}>Got it!</Text>
+          <TouchableOpacity onPress={onClose}>
+            <LinearGradient
+              colors={['#00F5A0', '#00D9F5']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>Got it!</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </View>
@@ -43,51 +62,49 @@ export default function HowToPlayModal({ visible, onClose }: HowToPlayModalProps
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  centeredView: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,50,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContainer: {
-    backgroundColor: '#0B4FB5',
-    padding: 20,
-    borderRadius: 12,
-    width: '85%',
+  modalView: {
+    backgroundColor: '#1a0b2e',
+    borderRadius: 20,
+    padding: 30,
     alignItems: 'center',
+    width: '85%',
+    maxWidth: 400,
   },
   closeButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    right: 15,
+    top: 15,
+    padding: 5,
   },
-  closeText: {
-    color: 'white',
+  modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  title: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  description: {
-    color: 'white',
-    fontSize: 14,
+    color: '#fff',
+    marginBottom: 20,
     textAlign: 'center',
-    marginBottom: 10,
   },
-  gotItButton: {
-    backgroundColor: '#00FF00',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 15,
-  },
-  gotItText: {
-    color: 'white',
-    fontWeight: 'bold',
+  modalText: {
     fontSize: 16,
+    color: '#fff',
+    marginBottom: 15,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

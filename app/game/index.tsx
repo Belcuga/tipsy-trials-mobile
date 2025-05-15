@@ -1,16 +1,22 @@
+import ContactUsModal from '@/components/ContactUsModal';
+import HowToPlayModal from '@/components/HowToPlayModal';
 import { useGame } from '@/context/GameContext';
 import { supabase } from '@/lib/supabase';
 import { GameState } from '@/types/game';
 import { Drink } from '@/types/player';
 import { Question } from '@/types/question';
-import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function GameScreen() {
-  const router = useRouter();
   const { gameState, setGameState, setLoading } = useGame();
   const [votedType, setVotedType] = useState<'like' | 'dislike' | null>(null);
+  const [settingsVisible, setSettingsVisible] = useState(false);
+  const [howToPlayVisible, setHowToPlayVisible] = useState(false);
+  const [contactVisible, setContactVisible] = useState(false);
 
   useEffect(() => {
 
@@ -332,73 +338,153 @@ export default function GameScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Image
-          source={require('../../assets/images/logo.png')}
-          style={styles.logo}
-        />
-        <Text style={styles.title}>Tipsy Trials</Text>
-        <TouchableOpacity style={styles.settingsBtn}>
-          <Text style={styles.settingsIcon}>⚙️</Text>
-        </TouchableOpacity>
+        
+        <View style={styles.headerCenter}>
+          <Image
+              source={require('../../assets/images/logo.png')}
+              style={styles.logo}
+          />
+          <Text style={styles.title}>Tipsy Trials</Text>
+        </View>
+
+        <View style={styles.settingsContainer}>
+          <TouchableOpacity
+            style={styles.settingsBtn}
+            onPress={() => setSettingsVisible(!settingsVisible)}
+          >
+            <Ionicons name="settings-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+          {settingsVisible && (
+            <View style={styles.dropdown}>
+              <TouchableOpacity 
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setSettingsVisible(false);
+                  setHowToPlayVisible(true);
+                }}
+              >
+                <Text style={styles.dropdownText}>How to Play</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setSettingsVisible(false);
+                  setContactVisible(true);
+                }}
+              >
+                <Text style={styles.dropdownText}>Contact Us</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </View>
 
-      {/* Player turn */}
-      <Text style={styles.turnText}>{currentPlayer?.playerInfo?.name ?? ''}'s Turn</Text>
+      {/* Player Turn */}
+      <Text style={styles.playerTurn}>
+        {currentPlayer?.playerInfo.name}'s Turn
+      </Text>
 
-      {/* Question card */}
-      <View style={styles.card}>
+      {/* Question Card */}
+      <View style={styles.questionCard}>
         <Text style={styles.questionText}>{questionText}</Text>
-        <Text style={styles.questionText}>{showNumberOfSips()}</Text>
+        <View style={styles.consequenceContainer}>
+          {showNumberOfSips()}
+        </View>
       </View>
 
-      {/* Buttons */}
-      <View style={styles.feedbackButtons}>
-        <TouchableOpacity style={styles.feedbackIcon} onPress={() => handleVote('dislike')}>
-          <Text style={styles.iconText}>👎</Text>
+      {/* Vote Buttons */}
+      <View style={styles.voteContainer}>
+        <TouchableOpacity 
+          style={[
+            styles.voteButton, 
+            votedType === 'dislike' && styles.votedButton,
+            !!votedType && styles.disabledButton
+          ]}
+          onPress={() => handleVote('dislike')}
+          disabled={!!votedType}
+        >
+          <Ionicons 
+            name="thumbs-down-sharp"
+            size={20} 
+            color={votedType === 'dislike' ? '#fff' : '#1a0b2e'} 
+          />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.feedbackIcon} onPress={() => handleVote('like')}>
-          <Text style={styles.iconText}>👍</Text>
+        
+        <TouchableOpacity 
+          style={[
+            styles.voteButton, 
+            votedType === 'like' && styles.votedButton,
+            !!votedType && styles.disabledButton
+          ]}
+          onPress={() => handleVote('like')}
+          disabled={!!votedType}
+        >
+          <Ionicons 
+            name="thumbs-up-sharp"
+            size={20} 
+            color={votedType === 'like' ? '#fff' : '#1a0b2e'} 
+          />
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-        <Text style={styles.nextText}>Next</Text>
-      </TouchableOpacity>
+      {/* Next Button */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.nextButtonWrapper} onPress={handleNext}>
+          <LinearGradient
+            colors={['#00F5A0', '#00D9F5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.nextButton}
+          >
+            <Text style={styles.buttonText}>Next</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+        
+        <View style={styles.skipContainer}>
+          {(currentPlayer?.skipCount ?? 0) > 0 && currentPlayer?.playerInfo.id !== '0' && (
+            <TouchableOpacity onPress={handleSkip}>
+              <Text style={styles.skipText}>Skip</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
-      <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-        <Text style={styles.skipText}>Skip</Text>
-      </TouchableOpacity>
-    </View>
+      <HowToPlayModal
+        visible={howToPlayVisible}
+        onClose={() => setHowToPlayVisible(false)}
+      />
+
+      <ContactUsModal
+        visible={contactVisible}
+        onClose={() => setContactVisible(false)}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B4FB5',
-    alignItems: 'center',
+    backgroundColor: '#1a0b2e',
     padding: 20,
-    paddingTop: 50,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    width: '100%',
-    justifyContent: 'center',
-    position: 'relative',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+    marginTop: 20,
   },
-  backIcon: {
-    fontSize: 24,
-    color: 'white',
-    position: 'absolute',
-    left: 10,
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   logo: {
     width: 30,
@@ -406,79 +492,138 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  settingsBtn: {
-    position: 'absolute',
-    right: 10,
-  },
-  settingsIcon: {
     fontSize: 24,
-    color: 'white',
+    fontWeight: 'bold',
+    color: '#fff',
   },
-  turnText: {
-    fontSize: 18,
-    color: 'white',
+  playerTurn: {
+    fontSize: 20,
+    color: '#fff',
+    textAlign: 'center',
     marginBottom: 20,
+    marginTop: 20,
   },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+  questionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
     padding: 20,
-    marginBottom: 30,
+    marginVertical: 20,
     width: '100%',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   questionText: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: 18,
+    color: '#1a0b2e',
     textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 24,
   },
-  feedbackButtons: {
+  consequenceContainer: {
+    marginTop: 15,
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  voteContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 15,
+    marginTop: 'auto',
+  },
+  voteButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  votedButton: {
+    backgroundColor: '#00F5A0',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  feedbackIcon: {
-    backgroundColor: '#444',
-    borderRadius: 50,
-    padding: 10,
-    marginHorizontal: 10,
-  },
-  iconText: {
-    fontSize: 18,
-    color: 'white',
+  nextButtonWrapper: {
+    width: '80%',
   },
   nextButton: {
-    backgroundColor: '#00FF00',
-    paddingVertical: 12,
-    paddingHorizontal: 50,
-    borderRadius: 8,
-    marginBottom: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#00F5A0',
   },
-  nextText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  skipButton: {
-    backgroundColor: '#666',
-    paddingVertical: 8,
-    paddingHorizontal: 30,
-    borderRadius: 8,
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
   },
   skipText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
+    color: '#fff',
+    fontSize: 16,
   },
   sipText: {
     textAlign: 'left',
     color: '#333',
     fontSize: 14,
-    marginBottom: 4,
+    marginBottom: 8,
+    width: '100%',
   },
   sipTextBold: {
     fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  settingsContainer: {
+    position: 'relative',
+  },
+  settingsBtn: {
+    padding: 5,
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 40,
+    right: 0,
+    backgroundColor: '#1a0b2e',
+    borderRadius: 10,
+    padding: 5,
+    minWidth: 150,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    padding: 12,
+    borderRadius: 8,
+  },
+  dropdownText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  skipContainer: {
+    height: 40,
+    justifyContent: 'center',
+    marginTop: 15,
   },
 });

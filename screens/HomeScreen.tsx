@@ -5,10 +5,12 @@ import { supabase } from '@/lib/supabase';
 import { GamePlayer, GameState } from '@/types/game';
 import { Drink, Gender } from '@/types/player';
 import { Question } from '@/types/question';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { FlatList, Image, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import AddPlayerModal from '../components/AddPlayerModal';
 
 interface Player {
@@ -175,7 +177,7 @@ export default function HomeScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
             {/* Header */}
             <View style={styles.header}>
                 <Image
@@ -183,225 +185,269 @@ export default function HomeScreen() {
                     style={styles.logo}
                 />
                 <Text style={styles.title}>Tipsy Trials</Text>
-                <TouchableOpacity
-                    style={styles.settingsBtn}
-                    onPress={() => setSettingsVisible(!settingsVisible)}
-                >
-                    <Text style={styles.settingsIcon}>⚙️</Text>
-                </TouchableOpacity>
-                {settingsVisible && (
-                    <View style={styles.dropdown}>
-                        <TouchableOpacity onPress={() => {
-                            setSettingsVisible(false);
-                            setHowToPlayVisible(true);
-                        }}>
-                            <Text style={styles.dropdownText}>How to Play</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity onPress={() => {
-                            setSettingsVisible(false);
-                            setContactVisible(true);
-                        }}>
-                            <Text style={styles.dropdownText}>Contact Us</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
+                <View style={styles.settingsContainer}>
+                    <TouchableOpacity
+                        style={styles.settingsBtn}
+                        onPress={() => setSettingsVisible(!settingsVisible)}
+                    >
+                        <Ionicons name="settings-outline" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    {settingsVisible && (
+                        <View style={styles.dropdown}>
+                            <TouchableOpacity 
+                                style={styles.dropdownItem}
+                                onPress={() => {
+                                    setSettingsVisible(false);
+                                    setHowToPlayVisible(true);
+                                }}
+                            >
+                                <Text style={styles.dropdownText}>How to Play</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={styles.dropdownItem}
+                                onPress={() => {
+                                    setSettingsVisible(false);
+                                    setContactVisible(true);
+                                }}
+                            >
+                                <Text style={styles.dropdownText}>Contact Us</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
             </View>
 
-            {/* Players Section */}
-            <Text style={styles.sectionTitle}>Players</Text>
-            <FlatList
-                data={players}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.playerItem}>
-                        <Text style={styles.playerName}>{item.name}</Text>
-                        <TouchableOpacity onPress={() => removePlayer(item.id)}>
-                            <Text style={styles.deleteIcon}>🗑️</Text>
-                        </TouchableOpacity>
+            {/* Main Content */}
+            <View style={styles.mainContent}>
+                {/* Players Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Players</Text>
+                    <FlatList
+                        data={players}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <View style={styles.playerCard}>
+                                <Text style={styles.playerName}>{item.name}</Text>
+                                <TouchableOpacity onPress={() => removePlayer(item.id)}>
+                                    <Ionicons name="copy-outline" size={20} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        style={styles.playerList}
+                    />
+                    
+                    <TouchableOpacity onPress={() => setModalVisible(true)}>
+                        <LinearGradient
+                            colors={['#00F5A0', '#00D9F5']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.addButton}
+                        >
+                            <Text style={styles.addButtonText}>Add Player</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Game Mode Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Choose Your Mode</Text>
+                    <View style={styles.modeContainer}>
+                        <View style={styles.modeOption}>
+                            <Text style={styles.modeText}>Include Spicy Questions (18+)</Text>
+                            <Switch
+                                value={gameSettings.adultMode}
+                                onValueChange={() => toggleSetting('adultMode')}
+                                trackColor={{ false: '#3a3a3a', true: '#00F5A0' }}
+                                thumbColor={gameSettings.adultMode ? '#fff' : '#f4f3f4'}
+                            />
+                        </View>
+                        <View style={styles.modeOption}>
+                            <Text style={styles.modeText}>Include Challenges</Text>
+                            <Switch
+                                value={gameSettings.challenges}
+                                onValueChange={() => toggleSetting('challenges')}
+                                trackColor={{ false: '#3a3a3a', true: '#00F5A0' }}
+                                thumbColor={gameSettings.challenges ? '#fff' : '#f4f3f4'}
+                            />
+                        </View>
+                        <View style={styles.modeOption}>
+                            <Text style={styles.modeText}>Only Spicy Stuff (18+)</Text>
+                            <Switch
+                                value={gameSettings.dirtyMode}
+                                onValueChange={() => toggleSetting('dirtyMode')}
+                                trackColor={{ false: '#3a3a3a', true: '#00F5A0' }}
+                                thumbColor={gameSettings.dirtyMode ? '#fff' : '#f4f3f4'}
+                            />
+                        </View>
                     </View>
-                )}
-                style={styles.playersList}
-            />
-            <TouchableOpacity style={styles.addPlayerBtn} onPress={() => setModalVisible(true)}>
-                <Text style={styles.addPlayerText}>Add Player</Text>
-            </TouchableOpacity>
 
-            {/* Mode Section */}
-            <View style={styles.bottomSection}>
-                <Text style={styles.sectionTitle}>Choose Your Mode</Text>
-                <View style={styles.switchBox}>
-                    <Text style={styles.switchLabel}>Include Spicy Questions (18+)</Text>
-                    <Switch
-                        value={gameSettings.adultMode}
-                        onValueChange={() => toggleSetting('adultMode')}
-                    />
+                    <TouchableOpacity 
+                        onPress={startGame}
+                        disabled={players.length < 2}
+                    >
+                        <LinearGradient
+                            colors={['#00F5A0', '#00D9F5']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={[styles.startButton, players.length < 2 && styles.disabledButton]}
+                        >
+                            <Text style={styles.startButtonText}>Start Game</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
                 </View>
-                <View style={styles.switchBox}>
-                    <Text style={styles.switchLabel}>Include Challenges</Text>
-                    <Switch
-                        value={gameSettings.challenges}
-                        onValueChange={() => toggleSetting('challenges')}
-                    />
-                </View>
-                <View style={styles.switchBox}>
-                    <Text style={styles.switchLabel}>Only Spicy Stuff (18+)</Text>
-                    <Switch
-                        value={gameSettings.dirtyMode}
-                        onValueChange={() => toggleSetting('dirtyMode')}
-                    />
-                </View>
-
-                <TouchableOpacity style={styles.startBtn} onPress={startGame}>
-                    <Text style={styles.startText}>Start Game</Text>
-                </TouchableOpacity>
             </View>
+
             <AddPlayerModal
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
                 onAdd={(player) => {
-                    setPlayers((prev) => [...prev, { id: Date.now().toString(), ...player }]);
+                    setPlayers((prev) => [...prev, { ...player, id: Date.now().toString() }]);
                     setModalVisible(false);
                 }}
             />
+
             <HowToPlayModal
                 visible={howToPlayVisible}
                 onClose={() => setHowToPlayVisible(false)}
             />
+
             <ContactUsModal
                 visible={contactVisible}
                 onClose={() => setContactVisible(false)}
             />
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    safeArea: {
         flex: 1,
-        backgroundColor: '#0B4FB5',
-        alignItems: 'center',
-        padding: 20,
-        paddingTop: 50,
+        backgroundColor: '#1a0b2e',
+        paddingTop: 20,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
-        width: '100%',
         justifyContent: 'center',
+        paddingHorizontal: 20,
+        paddingTop: 30,
+        paddingBottom: 30,
         position: 'relative',
     },
+    mainContent: {
+        flex: 1,
+        paddingHorizontal: 20,
+        paddingTop: 20,
+    },
     logo: {
-        width: 40,
-        height: 40,
+        width: 30,
+        height: 30,
         marginRight: 10,
     },
     title: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: 'white',
+        color: '#fff',
+    },
+    settingsContainer: {
+        position: 'absolute',
+        right: 20,
     },
     settingsBtn: {
-        position: 'absolute',
-        right: 10,
-    },
-    settingsIcon: {
-        fontSize: 24,
-        color: 'white',
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: 'white',
-        marginVertical: 10,
-    },
-    addPlayerBtn: {
-        backgroundColor: '#00FF00',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        width: '100%',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    addPlayerText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    bottomSection: {
-        position: 'absolute',
-        bottom: 30,
-        width: '100%',
-        alignItems: 'center',
-    },
-    switchBox: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        borderRadius: 8,
-        width: '100%',
-        marginBottom: 5, // ⬅️ smaller gap
-        alignItems: 'center',
-        backgroundColor: 'transparent',
-    },
-    switchLabel: {
-        flex: 1,
-        fontSize: 14,
-        marginRight: 10,
-        color: 'white'
-    },
-    startBtn: {
-        backgroundColor: '#00FF00',
-        paddingVertical: 15,
-        paddingHorizontal: 40,
-        borderRadius: 8,
-        marginTop: 20,
-    },
-    startText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
+        padding: 5,
     },
     dropdown: {
         position: 'absolute',
-        top: 60,
-        right: 10,
-        backgroundColor: 'white',
-        borderRadius: 8,
+        top: 40,
+        right: 0,
+        backgroundColor: '#1a0b2e',
+        borderRadius: 10,
+        padding: 5,
+        minWidth: 150,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
         elevation: 5,
-        paddingVertical: 10,
-        width: 150,
-        zIndex: 100,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        zIndex: 1000,
     },
     dropdownItem: {
-        paddingVertical: 10,
-        paddingHorizontal: 15,
+        padding: 12,
+        borderRadius: 8,
     },
     dropdownText: {
+        color: '#fff',
         fontSize: 16,
-        color: '#333',
+        textAlign: 'center',
     },
-    playerItem: {
+    section: {
+        flex: 1,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#fff',
+        marginBottom: 10,
+    },
+    playerCard: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        backgroundColor: 'white',
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 10,
-        width: '100%',
         alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 8,
     },
     playerName: {
+        color: '#fff',
         fontSize: 16,
-        color: '#333',
     },
-    deleteIcon: {
-        fontSize: 18,
-        color: 'red',
+    playerList: {
+        flex: 1,
+        marginBottom: 10,
     },
-    playersList: {
-        width: '100%',
-        maxHeight: 300,
+    addButton: {
+        padding: 12,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    addButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    modeContainer: {
+        marginBottom: 15,
+    },
+    modeOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    modeText: {
+        color: '#fff',
+        fontSize: 14,
+        flex: 1,
+        paddingRight: 10,
+    },
+    startButton: {
+        padding: 12,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    startButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    disabledButton: {
+        opacity: 0.5,
     },
 });

@@ -1,119 +1,144 @@
-import { Drink, Gender } from '@/types/player';
+import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  Modal,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Modal,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 interface AddPlayerModalProps {
   visible: boolean;
   onClose: () => void;
-  onAdd: (player: {
-    name: string;
-    gender: string;
-    drink: string;
-    single: boolean;
-  }) => void;
+  onAdd: (player: { name: string; gender: string; drink: string; single: boolean }) => void;
 }
 
-export default function AddPlayerModal({
-  visible,
-  onClose,
-  onAdd,
-}: AddPlayerModalProps) {
+export default function AddPlayerModal({ visible, onClose, onAdd }: AddPlayerModalProps) {
   const [name, setName] = useState('');
   const [gender, setGender] = useState('Male');
   const [drink, setDrink] = useState('Beer');
   const [single, setSingle] = useState(false);
 
   const handleAdd = () => {
-    if (name.trim() === '') return;
-    onAdd({ name, gender, drink, single });
+    if (!name.trim()) return;
+    onAdd({ name: name.trim(), gender, drink, single });
     setName('');
     setGender('Male');
     setDrink('Beer');
     setSingle(false);
-    onClose();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Add Player</Text>
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Add Player</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
 
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter name"
-            placeholderTextColor="#ccc"
-          />
-
-          <Text style={styles.label}>Gender</Text>
-          <Picker
-            selectedValue={gender}
-            onValueChange={setGender}
-            style={styles.picker}
-          >
-            <Picker.Item label="Male" value={Gender.Male} />
-            <Picker.Item label="Female" value={Gender.Female} />
-          </Picker>
-
-          <Text style={styles.label}>What are you drinking?</Text>
-          <Picker
-            selectedValue={drink}
-            onValueChange={setDrink}
-            style={styles.picker}
-          >
-            <Picker.Item label="Beer" value={Drink.Beer} />
-            <Picker.Item label="Wine" value={Drink.Wine} />
-            <Picker.Item label="Whiskey, Vodka, or other Strong Drinks" value={Drink.Strong} />
-            <Picker.Item label="Nothing" value={Drink.None} />
-          </Picker>
-
-          <Text style={styles.label}>Are you single?</Text>
-          <View style={styles.switchGroup}>
-            <View style={styles.switchRow}>
-              <Switch
-                value={single === true}
-                onValueChange={() => setSingle(true)}
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter player name"
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                value={name}
+                onChangeText={setName}
               />
-              <Text style={styles.switchLabel}>
-                Yes – You will get spicy challenges with other players
-              </Text>
             </View>
 
-            <View style={styles.switchRow}>
-              <Switch
-                value={single === false}
-                onValueChange={() => setSingle(false)}
-              />
-              <Text style={styles.switchLabel}>
-                No – You will not get spicy challenges with other players
-              </Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Gender</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={gender}
+                  onValueChange={(value) => setGender(value)}
+                  style={styles.picker}
+                  dropdownIconColor="#fff"
+                >
+                  <Picker.Item label="Male" value="Male" />
+                  <Picker.Item label="Female" value="Female" />
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>What are you drinking?</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={drink}
+                  onValueChange={(value) => setDrink(value)}
+                  style={styles.picker}
+                  dropdownIconColor="#fff"
+                >
+                  <Picker.Item label="Beer" value="Beer" />
+                  <Picker.Item label="Wine" value="Wine" />
+                  <Picker.Item label="Strong" value="Strong" />
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.switchContainer}>
+              <View style={styles.switchGroup}>
+                <Switch
+                  value={single}
+                  onValueChange={(value) => {
+                    if (value) setSingle(true);
+                  }}
+                  trackColor={{ false: '#3a3a3a', true: '#00F5A0' }}
+                  thumbColor={single ? '#fff' : '#f4f3f4'}
+                />
+                <Text style={[styles.switchLabel, single && styles.activeLabel]}>
+                  Single - Get spicy challenges
+                </Text>
+              </View>
+              <View style={styles.switchGroup}>
+                <Switch
+                  value={!single}
+                  onValueChange={(value) => {
+                    if (value) setSingle(false);
+                  }}
+                  trackColor={{ false: '#3a3a3a', true: '#00F5A0' }}
+                  thumbColor={!single ? '#fff' : '#f4f3f4'}
+                />
+                <Text style={[styles.switchLabel, !single && styles.activeLabel]}>
+                  Not Single - No spicy challenges
+                </Text>
+              </View>
             </View>
           </View>
 
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={onClose}
-            >
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.addButton]}
+            <TouchableOpacity 
               onPress={handleAdd}
+              disabled={!name.trim()}
+              style={{ flex: 1 }}
             >
-              <Text style={styles.buttonText}>Add</Text>
+              <LinearGradient
+                colors={['#00F5A0', '#00D9F5']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.addButton, !name.trim() && styles.disabledButton]}
+              >
+                <Text style={styles.buttonText}>Add</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>
@@ -123,84 +148,105 @@ export default function AddPlayerModal({
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  centeredView: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,50,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContainer: {
-    backgroundColor: '#0B4FB5',
+  modalView: {
+    backgroundColor: '#1a0b2e',
+    borderRadius: 20,
+    width: '90%',
+    maxWidth: 400,
     padding: 20,
-    borderRadius: 12,
-    width: '85%',
   },
-  modalTitle: {
-    color: 'white',
-    fontSize: 20,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 30,
+    position: 'relative',
+  },
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 15,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 0,
+    padding: 5,
+  },
+  form: {
+    gap: 20,
+  },
+  inputGroup: {
+    gap: 10,
   },
   label: {
-    color: 'white',
-    fontSize: 14,
-    marginTop: 10,
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
   input: {
-    backgroundColor: 'white',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginTop: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    padding: 12,
+    color: '#fff',
+    fontSize: 16,
+  },
+  pickerContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   picker: {
-    backgroundColor: 'white',
-    borderRadius: 6,
-    marginTop: 5,
+    color: '#fff',
+    backgroundColor: 'transparent',
+  },
+  switchContainer: {
+    gap: 15,
+    marginTop: 10,
   },
   switchGroup: {
-    width: '100%',
-    marginVertical: 10,
-  },
-
-  switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    gap: 15,
   },
-
   switchLabel: {
-    flex: 1,
-    marginLeft: 10,
-    color: 'white',
+    color: 'rgba(255, 255, 255, 0.5)',
     fontSize: 14,
-  },
-  switchText: {
     flex: 1,
-    marginLeft: 10,
-    color: 'white',
-    fontSize: 12,
   },
-  buttonRow: {
+  activeLabel: {
+    color: '#fff',
+  },
+  buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 10,
-    marginHorizontal: 5,
-    borderRadius: 6,
-    alignItems: 'center',
+    gap: 15,
+    marginTop: 30,
   },
   cancelButton: {
-    backgroundColor: '#FF4C4C',
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
   },
   addButton: {
-    backgroundColor: '#00FF00',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
