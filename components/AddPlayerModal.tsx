@@ -3,13 +3,13 @@ import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-    Modal,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Modal,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface AddPlayerModalProps {
@@ -87,7 +87,7 @@ export default function AddPlayerModal({ visible, onClose, onAdd }: AddPlayerMod
                 >
                   <Picker.Item label="Beer" value="Beer" />
                   <Picker.Item label="Wine" value="Wine" />
-                  <Picker.Item label="Strong" value="Strong" />
+                  <Picker.Item label="Whiskey, Vodka or other Strong Drinks" value="Strong" />
                 </Picker>
               </View>
             </View>
@@ -103,7 +103,7 @@ export default function AddPlayerModal({ visible, onClose, onAdd }: AddPlayerMod
                   thumbColor={single ? '#fff' : '#f4f3f4'}
                 />
                 <Text style={[styles.switchLabel, single && styles.activeLabel]}>
-                  Single - Get spicy challenges
+                  Single - You will get spicy challenges with other players
                 </Text>
               </View>
               <View style={styles.switchGroup}>
@@ -116,7 +116,7 @@ export default function AddPlayerModal({ visible, onClose, onAdd }: AddPlayerMod
                   thumbColor={!single ? '#fff' : '#f4f3f4'}
                 />
                 <Text style={[styles.switchLabel, !single && styles.activeLabel]}>
-                  Not Single - No spicy challenges
+                  No - You will not get spicy challenges with other players
                 </Text>
               </View>
             </View>
