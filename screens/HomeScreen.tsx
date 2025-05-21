@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { FlatList, Image, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import AddPlayerModal from '../components/AddPlayerModal';
 
 interface Player {
@@ -243,7 +243,7 @@ export default function HomeScreen() {
                             end={{ x: 1, y: 0 }}
                             style={styles.addButton}
                         >
-                            <Text style={styles.addButtonText}>Add Player</Text>
+                            <Text style={styles.addButtonText}>Add a Player</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>
@@ -283,15 +283,19 @@ export default function HomeScreen() {
 
                     <TouchableOpacity 
                         onPress={startGame}
-                        disabled={players.length < 2}
+                        disabled={players.length < 2 || loading}
                     >
                         <LinearGradient
                             colors={['#00F5A0', '#00D9F5']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
-                            style={[styles.startButton, players.length < 2 && styles.disabledButton]}
+                            style={[styles.startButton, (players.length < 2 || loading) && styles.disabledButton]}
                         >
-                            <Text style={styles.startButtonText}>Start Game</Text>
+                            {loading ? (
+                                <ActivityIndicator color="#fff" size="small" />
+                            ) : (
+                                <Text style={styles.startButtonText}>Start Game</Text>
+                            )}
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>
@@ -398,7 +402,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: '#2D1B69',
         padding: 12,
         borderRadius: 10,
         marginBottom: 8,
@@ -416,6 +420,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
         marginBottom: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     addButtonText: {
         color: '#fff',
@@ -441,6 +446,7 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 10,
         alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     startButtonText: {
         color: '#fff',

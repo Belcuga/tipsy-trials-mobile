@@ -2,12 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
-    Linking,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Linking,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface ContactUsModalProps {
@@ -43,10 +43,10 @@ export default function ContactUsModal({ visible, onClose }: ContactUsModalProps
           </Text>
 
           <TouchableOpacity 
-            onPress={() => Linking.openURL('mailto:tipsytrials@gmail.com')}
+            onPress={() => Linking.openURL('mailto:hello@tipsytrials.com')}
           >
             <Text style={[styles.modalText, styles.emailText]}>
-              tipsytrials@gmail.com
+              hello@tipsytrials.com
             </Text>
           </TouchableOpacity>
 

@@ -7,9 +7,12 @@ import { Drink } from '@/types/player';
 import { Question } from '@/types/question';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const isSmallScreen = width < 300;
 
 export default function GameScreen() {
   const { gameState, setGameState, setLoading } = useGame();
@@ -34,6 +37,17 @@ export default function GameScreen() {
     }
     setLoading(false);
   }, [gameState]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (Platform.OS === 'ios') {
+        router.setParams({
+          gestureEnabled: 'true',
+          gestureDirection: 'horizontal',
+        });
+      }
+    }, [])
+  );
 
   if (!gameState) {
     return <></>
@@ -247,12 +261,12 @@ export default function GameScreen() {
       const sips = [
         `Beer drinker - take ${Math.ceil(punishment * 1.5)} sips`,
         `Wine drinker - take ${punishment * 1} sips`,
-        `Strong drinks - take ${Math.ceil(punishment * 0.5)} sips`,
+        `Strong drinker - take ${Math.ceil(punishment * 0.5)} sips`,
       ];
 
       if (gameState.currentQuestion.question.includes('Everyone')) {
         sips.unshift('If your answer is yes and you are:');
-      } else if (gameState.currentQuestion.question.includes(`Who’s`)) {
+      } else if (gameState.currentQuestion.question.includes(`Who's`)) {
         sips.unshift('The person with most votes, if they are:');
       }
 
@@ -276,10 +290,10 @@ export default function GameScreen() {
             : 0.5;
 
       const sips = Math.ceil((gameState?.currentQuestion?.punishment ?? 0) * multiplier);
-
+      const punishmentText = gameState?.currentQuestion?.challenge === true ? `Do or Take ${sips} Sips` : `Answer or Take ${sips} Sips`
       return (
         <Text style={[styles.sipText, styles.sipTextBold]}>
-          Answer or Take {sips} Sips
+          {punishmentText}
         </Text>
       );
     }
@@ -403,7 +417,7 @@ export default function GameScreen() {
         <TouchableOpacity 
           style={[
             styles.voteButton, 
-            votedType === 'dislike' && styles.votedButton,
+            votedType === 'dislike' && styles.dislikeVotedButton,
             !!votedType && styles.disabledButton
           ]}
           onPress={() => handleVote('dislike')}
@@ -472,7 +486,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a0b2e',
-    padding: 20,
+    padding: isSmallScreen ? 30 : 15,
     paddingBottom: 40,
   },
   header: {
@@ -485,6 +499,8 @@ const styles = StyleSheet.create({
   headerCenter: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
   logo: {
     width: 30,
@@ -548,6 +564,9 @@ const styles = StyleSheet.create({
   votedButton: {
     backgroundColor: '#00F5A0',
   },
+  dislikeVotedButton: {
+    backgroundColor: '#FF4B4B',
+  },
   disabledButton: {
     opacity: 0.5,
   },
@@ -587,10 +606,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   settingsContainer: {
-    position: 'relative',
+    position: 'absolute',
+    right: isSmallScreen ? 5 : 0,
   },
   settingsBtn: {
-    padding: 5,
+    padding: 8,
+    minWidth: 40,
+    alignItems: 'center',
   },
   dropdown: {
     position: 'absolute',
