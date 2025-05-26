@@ -169,7 +169,21 @@ export default function GameScreen() {
     if (!gameState || !currentPlayer || currentPlayer.skipCount <= 0) return;
 
     currentPlayer.skipCount--;
-    handleNext();
+    
+    // Get a new question for the current player
+    const updatedAnsweredIds = [...gameState.answeredQuestionIds, gameState.currentQuestion?.id ?? 0];
+    const nextQuestion = pickNextQuestion(currentPlayer.playerInfo.id, {
+      ...gameState,
+      answeredQuestionIds: updatedAnsweredIds,
+    });
+
+    setGameState({
+      ...gameState,
+      answeredQuestionIds: updatedAnsweredIds,
+      currentQuestion: nextQuestion,
+    });
+
+    setVotedType(null);
   }
 
   const sips = showNumberOfSips(gameState, currentPlayer);
