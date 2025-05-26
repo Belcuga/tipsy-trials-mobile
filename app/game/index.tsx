@@ -9,7 +9,7 @@ import { Question } from '@/types/question';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Image, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Dimensions, Image, Linking, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -169,7 +169,7 @@ export default function GameScreen() {
     if (!gameState || !currentPlayer || currentPlayer.skipCount <= 0) return;
 
     currentPlayer.skipCount--;
-    
+
     // Get a new question for the current player
     const updatedAnsweredIds = [...gameState.answeredQuestionIds, gameState.currentQuestion?.id ?? 0];
     const nextQuestion = pickNextQuestion(currentPlayer.playerInfo.id, {
@@ -215,7 +215,7 @@ export default function GameScreen() {
             {settingsVisible && (
               <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                 <View style={styles.dropdown}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.dropdownItem}
                     onPress={() => {
                       setSettingsVisible(false);
@@ -224,7 +224,7 @@ export default function GameScreen() {
                   >
                     <Text style={styles.dropdownText}>How to Play</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.dropdownItem}
                     onPress={() => {
                       setSettingsVisible(false);
@@ -232,6 +232,15 @@ export default function GameScreen() {
                     }}
                   >
                     <Text style={styles.dropdownText}>Contact Us</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      const url = 'https://www.tipsytrials.com/policy';
+                      Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+                    }}
+                  >
+                    <Text style={styles.dropdownText}>Privacy Policy</Text>
                   </TouchableOpacity>
                 </View>
               </TouchableWithoutFeedback>
