@@ -1,18 +1,17 @@
 import ContactUsModal from '@/components/ContactUsModal';
+import GameControls from '@/components/game/GameControls';
+import QuestionDisplay from '@/components/game/QuestionDisplay';
 import HowToPlayModal from '@/components/HowToPlayModal';
 import { useGame } from '@/context/GameContext';
+import { pickNextPlayer, pickNextQuestion, replacePlayerPlaceholder, showNumberOfSips, shuffleArray } from '@/lib/gameUtils';
 import { supabase } from '@/lib/supabase';
-import { GameState } from '@/types/game';
-import { Drink } from '@/types/player';
 import { Question } from '@/types/question';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Image, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const isSmallScreen = width < 300;
 
 export default function GameScreen() {
   const { gameState, setGameState, setLoading } = useGame();
@@ -22,7 +21,6 @@ export default function GameScreen() {
   const [contactVisible, setContactVisible] = useState(false);
 
   useEffect(() => {
-
     if (!gameState) return;
 
     if (!gameState.currentPlayerId) {
@@ -50,7 +48,7 @@ export default function GameScreen() {
   );
 
   if (!gameState) {
-    return <></>
+    return null;
   }
 
   const currentPlayer = gameState.players.find(p => p.playerInfo.id === gameState.currentPlayerId);
@@ -90,94 +88,6 @@ export default function GameScreen() {
     }
 
     setVotedType(type);
-  }
-
-  function pickNextPlayer(state: GameState): string {
-    const available = state.roundPlayersLeft;
-    const randomIndex = Math.floor(Math.random() * available.length);
-    return available[randomIndex];
-  }
-
-  function pickNextQuestion(playerId: string, state: GameState): Question {
-    const player = state.players.find(p => p.playerInfo.id === playerId);
-    if (!player) {
-      const availableQuestions = state.questions.filter(
-        q => !state.answeredQuestionIds.includes(q.id) && q.all_players
-      );
-
-      if (availableQuestions.length === 0) {
-        throw new Error('No questions available for this difficulty');
-      }
-
-      return availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-    }
-    else {
-      const desiredDifficulty = player.difficultyQueue[player.difficultyIndex];
-      let allPlayersQuestion = false;
-      let desiredDifficultyRequired = true;
-      if (player.playerInfo.id === '0') {
-        allPlayersQuestion = true;
-        desiredDifficultyRequired = false;
-      }
-
-      const otherPlayers = state.players.filter(
-        p => p.playerInfo.id !== player.playerInfo.id &&
-          p.playerInfo.gender !== player.playerInfo.gender &&
-          p.playerInfo.single &&
-          p.playerInfo.id !== '0'
-      );
-      let diff = desiredDifficulty;
-      let availableQuestions: Question[] = [];
-      while (availableQuestions.length === 0) {
-        availableQuestions = state.questions.filter(
-          q => {
-            const matchCount = (q.question.match(/\$\{player\}/g) || []).length;
-            return (!desiredDifficultyRequired ||
-              (q.difficulty === diff)) &&
-              !state.answeredQuestionIds.includes(q.id) &&
-              q.all_players === allPlayersQuestion &&
-              matchCount <= otherPlayers.length
-          }
-
-        );
-        diff--;
-      }
-      return availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-    }
-
-  }
-
-  function replacePlayerPlaceholder(question: string, state: GameState, currentPlayerId: string): string {
-    const PLACEHOLDER = '${player}';
-
-    if (!question.includes(PLACEHOLDER)) return question;
-
-    const currentPlayer = state.players.find(p => p.playerInfo.id === currentPlayerId);
-    if (!currentPlayer) return question;
-    // Filter eligible other players
-    const otherPlayers = state.players.filter(
-      p => p.playerInfo.id !== currentPlayerId &&
-        p.playerInfo.gender !== currentPlayer.playerInfo.gender &&
-        p.playerInfo.single &&
-        p.playerInfo.id !== '0'
-    );
-    const placeholderCount = (question.match(/\$\{player\}/g) || []).length;
-    if (otherPlayers.length === 0) return question;
-
-    // Count how many placeholders are in the string
-    // const placeholderCount = (question.match(/\$\{player\}/g) || []).length;
-
-    // Shuffle and pick unique players for each placeholder
-    const shuffled = [...otherPlayers].sort(() => Math.random() - 0.5);
-    const pickedPlayers = shuffled.slice(0, placeholderCount);
-
-    let replaced = question;
-    for (let i = 0; i < placeholderCount; i++) {
-      const name = pickedPlayers[i % pickedPlayers.length].playerInfo.name;
-      replaced = replaced.replace(PLACEHOLDER, name);
-    }
-
-    return replaced;
   }
 
   function handleNext() {
@@ -223,7 +133,7 @@ export default function GameScreen() {
 
     // Give extra skip every 10 rounds
     if (updatedRoundNumber % 10 === 1 && updatedRoundNumber !== 1) {
-      gameState.players.forEach(player => player.skipCount++);
+      gameState.players.forEach(player => player.playerInfo.id === '0' ? player.skipCount = 0 : player.skipCount++);
     }
 
     const nextPlayerId = pickNextPlayer({ ...gameState, roundPlayersLeft: newRoundPlayers });
@@ -255,230 +165,94 @@ export default function GameScreen() {
     setVotedType(null);
   }
 
-  function showNumberOfSips() {
-    if (gameState?.currentQuestion?.all_players) {
-      const punishment = gameState.currentQuestion.punishment ?? 0;
-      const sips = [
-        `Beer drinker - take ${Math.ceil(punishment * 1.5)} sips`,
-        `Wine drinker - take ${punishment * 1} sips`,
-        `Strong drinker - take ${Math.ceil(punishment * 0.5)} sips`,
-      ];
-
-      if (gameState.currentQuestion.question.includes('Everyone')) {
-        sips.unshift('If your answer is yes and you are:');
-      } else if (gameState.currentQuestion.question.includes(`Who's`)) {
-        sips.unshift('The person with most votes, if they are:');
-      }
-
-      return sips.map((line, idx) => (
-        <Text
-          key={idx}
-          style={[
-            styles.sipText,
-            idx === 0 && styles.sipTextBold
-          ]}
-        >
-          {line}
-        </Text>
-      ));
-    } else {
-      const multiplier =
-        currentPlayer?.playerInfo.drink === Drink.Beer
-          ? 1.5
-          : currentPlayer?.playerInfo.drink === Drink.Wine
-            ? 1
-            : 0.5;
-
-      const sips = Math.ceil((gameState?.currentQuestion?.punishment ?? 0) * multiplier);
-      const punishmentText = gameState?.currentQuestion?.challenge === true ? `Do or Take ${sips} Sips` : `Answer or Take ${sips} Sips`
-      return (
-        <Text style={[styles.sipText, styles.sipTextBold]}>
-          {punishmentText}
-        </Text>
-      );
-    }
-  }
-
-  function shuffleArray<T>(array: T[]): T[] {
-    return [...array].sort(() => Math.random() - 0.5);
-  }
-
   function handleSkip() {
-    if (!gameState) return;
+    if (!gameState || !currentPlayer || currentPlayer.skipCount <= 0) return;
 
-    const currentPlayerId = gameState.currentPlayerId;
-    const currentQuestion = gameState.currentQuestion;
-
-    if (!currentPlayerId || !currentQuestion) return;
-
-    const playerIndex = gameState.players.findIndex(p => p.playerInfo.id === currentPlayerId);
-    if (playerIndex === -1) return;
-
-    const player = gameState.players[playerIndex];
-
-    // ✅ Find another question with SAME difficulty (not answered + not current)
-    const availableQuestions = gameState.questions.filter(
-      (q) =>
-        q.difficulty === currentQuestion.difficulty &&
-        !gameState.answeredQuestionIds.includes(q.id) &&
-        q.id !== currentQuestion.id &&
-        !q.all_players
-    );
-
-    if (availableQuestions.length === 0) {
-      console.warn('No more questions available for this difficulty.');
-      return;
-    }
-
-    // 🔀 Pick a random new question
-    const newQuestion =
-      availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-
-    // ✅ Reduce skip count for the player (minimum 0)
-    const updatedPlayers = [...gameState.players];
-    updatedPlayers[playerIndex] = {
-      ...player,
-      skipCount: Math.max(0, player.skipCount - 1),
-    };
-
-    // ✅ Update game state with new question + updated skip count
-    setGameState({
-      ...gameState,
-      players: updatedPlayers,
-      currentQuestion: newQuestion,
-    });
-
-    setVotedType(null); // Reset like/dislike highlight
+    currentPlayer.skipCount--;
+    handleNext();
   }
+
+  const sips = showNumberOfSips(gameState, currentPlayer);
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerCenter}>
-          <Image
+    <TouchableWithoutFeedback onPress={() => setSettingsVisible(false)}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={28} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.titleContainer}>
+            <Image
               source={require('../../assets/images/logo.png')}
               style={styles.logo}
-          />
-          <Text style={styles.title}>Tipsy Trials</Text>
-        </View>
-
-        <View style={styles.settingsContainer}>
-          <TouchableOpacity
-            style={styles.settingsBtn}
-            onPress={() => setSettingsVisible(!settingsVisible)}
-          >
-            <Ionicons name="settings-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-          {settingsVisible && (
-            <View style={styles.dropdown}>
-              <TouchableOpacity 
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setSettingsVisible(false);
-                  setHowToPlayVisible(true);
-                }}
-              >
-                <Text style={styles.dropdownText}>How to Play</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setSettingsVisible(false);
-                  setContactVisible(true);
-                }}
-              >
-                <Text style={styles.dropdownText}>Contact Us</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* Player Turn */}
-      <Text style={styles.playerTurn}>
-        {currentPlayer?.playerInfo.name}'s Turn
-      </Text>
-
-      {/* Question Card */}
-      <View style={styles.questionCard}>
-        <Text style={styles.questionText}>{questionText}</Text>
-        <View style={styles.consequenceContainer}>
-          {showNumberOfSips()}
-        </View>
-      </View>
-
-      {/* Vote Buttons */}
-      <View style={styles.voteContainer}>
-        <TouchableOpacity 
-          style={[
-            styles.voteButton, 
-            votedType === 'dislike' && styles.dislikeVotedButton,
-            !!votedType && styles.disabledButton
-          ]}
-          onPress={() => handleVote('dislike')}
-          disabled={!!votedType}
-        >
-          <Ionicons 
-            name="thumbs-down-sharp"
-            size={20} 
-            color={votedType === 'dislike' ? '#fff' : '#1a0b2e'} 
-          />
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[
-            styles.voteButton, 
-            votedType === 'like' && styles.votedButton,
-            !!votedType && styles.disabledButton
-          ]}
-          onPress={() => handleVote('like')}
-          disabled={!!votedType}
-        >
-          <Ionicons 
-            name="thumbs-up-sharp"
-            size={20} 
-            color={votedType === 'like' ? '#fff' : '#1a0b2e'} 
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Next Button */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.nextButtonWrapper} onPress={handleNext}>
-          <LinearGradient
-            colors={['#00F5A0', '#00D9F5']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.nextButton}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-        
-        <View style={styles.skipContainer}>
-          {(currentPlayer?.skipCount ?? 0) > 0 && currentPlayer?.playerInfo.id !== '0' && (
-            <TouchableOpacity onPress={handleSkip}>
-              <Text style={styles.skipText}>Skip</Text>
+            />
+            <Text style={styles.titleText}>Tipsy Trials</Text>
+          </View>
+          <View style={styles.settingsContainer}>
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={(e) => {
+                e.stopPropagation();
+                setSettingsVisible(!settingsVisible);
+              }}
+            >
+              <Ionicons name="settings-outline" size={28} color="#fff" />
             </TouchableOpacity>
-          )}
+            {settingsVisible && (
+              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                <View style={styles.dropdown}>
+                  <TouchableOpacity 
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setSettingsVisible(false);
+                      setHowToPlayVisible(true);
+                    }}
+                  >
+                    <Text style={styles.dropdownText}>How to Play</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setSettingsVisible(false);
+                      setContactVisible(true);
+                    }}
+                  >
+                    <Text style={styles.dropdownText}>Contact Us</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableWithoutFeedback>
+            )}
+          </View>
         </View>
-      </View>
 
-      <HowToPlayModal
-        visible={howToPlayVisible}
-        onClose={() => setHowToPlayVisible(false)}
-      />
+        <View style={styles.content}>
+          <QuestionDisplay
+            question={questionText}
+            playerName={currentPlayer?.playerInfo.name || ''}
+            sipsText={sips}
+          />
+        </View>
 
-      <ContactUsModal
-        visible={contactVisible}
-        onClose={() => setContactVisible(false)}
-      />
-    </SafeAreaView>
+        <GameControls
+          onNext={handleNext}
+          onSkip={handleSkip}
+          onLike={() => handleVote('like')}
+          onDislike={() => handleVote('dislike')}
+          votedType={votedType}
+          skipCount={currentPlayer?.skipCount || 0}
+        />
+
+        <HowToPlayModal
+          visible={howToPlayVisible}
+          onClose={() => setHowToPlayVisible(false)}
+        />
+
+        <ContactUsModal
+          visible={contactVisible}
+          onClose={() => setContactVisible(false)}
+        />
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -486,133 +260,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a0b2e',
-    padding: isSmallScreen ? 30 : 15,
-    paddingBottom: 40,
+    paddingTop: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 30,
-    marginTop: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 30,
+    position: 'relative',
   },
-  headerCenter: {
+  titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
+    gap: 8,
   },
   logo: {
     width: 30,
     height: 30,
-    marginRight: 10,
+    marginRight: 4,
   },
-  title: {
+  titleText: {
+    color: '#00F5A0',
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
-  },
-  playerTurn: {
-    fontSize: 20,
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  questionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginVertical: 20,
-    width: '100%',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  questionText: {
-    fontSize: 18,
-    color: '#1a0b2e',
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 24,
-  },
-  consequenceContainer: {
-    marginTop: 15,
-    alignItems: 'flex-start',
-    width: '100%',
-  },
-  voteContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 15,
-    marginTop: 'auto',
-  },
-  voteButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  votedButton: {
-    backgroundColor: '#00F5A0',
-  },
-  dislikeVotedButton: {
-    backgroundColor: '#FF4B4B',
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  buttonContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  nextButtonWrapper: {
-    width: '80%',
-  },
-  nextButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    backgroundColor: '#00F5A0',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  skipText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  sipText: {
-    textAlign: 'left',
-    color: '#333',
-    fontSize: 14,
-    marginBottom: 8,
-    width: '100%',
-  },
-  sipTextBold: {
-    fontWeight: 'bold',
-    marginBottom: 12,
   },
   settingsContainer: {
-    position: 'absolute',
-    right: isSmallScreen ? 5 : 0,
+    position: 'relative',
   },
   settingsBtn: {
-    padding: 8,
-    minWidth: 40,
-    alignItems: 'center',
+    padding: 5,
   },
   dropdown: {
     position: 'absolute',
@@ -639,13 +317,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   dropdownText: {
-    color: '#fff',
+    color: '#00F5A0',
     fontSize: 16,
     textAlign: 'center',
   },
-  skipContainer: {
-    height: 40,
-    justifyContent: 'center',
-    marginTop: 15,
+  content: {
+    flex: 1,
+    paddingBottom: 140,
   },
 });

@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
@@ -7,13 +6,14 @@ import {
     Modal,
     Platform,
     StyleSheet,
-    Switch,
     Text,
-    TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
-    View
+    View,
 } from 'react-native';
+import CustomPicker from './ui/CustomPicker';
+import CustomSwitch from './ui/CustomSwitch';
+import FormField from './ui/FormField';
 
 interface AddPlayerModalProps {
   visible: boolean;
@@ -21,112 +21,34 @@ interface AddPlayerModalProps {
   onAdd: (player: { name: string; gender: string; drink: string; single: boolean }) => void;
 }
 
-export default function AddPlayerModal({ visible, onClose, onAdd }: AddPlayerModalProps) {
+const GENDER_OPTIONS = [
+  { label: 'Male', value: 'Male' },
+  { label: 'Female', value: 'Female' },
+];
+
+const DRINK_OPTIONS = [
+  { label: 'Beer', value: 'Beer' },
+  { label: 'Wine', value: 'Wine' },
+  { label: 'Whiskey, Vodka or other Strong Drinks', value: 'Strong' },
+];
+
+const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ visible, onClose, onAdd }) => {
   const [name, setName] = useState('');
   const [gender, setGender] = useState('Male');
   const [drink, setDrink] = useState('Beer');
   const [single, setSingle] = useState(false);
-  const [showGenderPicker, setShowGenderPicker] = useState(false);
-  const [showDrinkPicker, setShowDrinkPicker] = useState(false);
 
   const handleAdd = () => {
     if (!name.trim()) return;
     onAdd({ name: name.trim(), gender, drink, single });
+    resetForm();
+  };
+
+  const resetForm = () => {
     setName('');
     setGender('Male');
     setDrink('Beer');
     setSingle(false);
-  };
-
-  const renderPicker = (type: 'gender' | 'drink') => {
-    const isGender = type === 'gender';
-    const options = isGender
-      ? [{ label: 'Male', value: 'Male' }, { label: 'Female', value: 'Female' }]
-      : [
-        { label: 'Beer', value: 'Beer' },
-        { label: 'Wine', value: 'Wine' },
-        { label: 'Whiskey, Vodka or other Strong Drinks', value: 'Strong' }
-      ];
-
-    const value = isGender ? gender : drink;
-    const setValue = isGender ? setGender : setDrink;
-    const showPicker = isGender ? showGenderPicker : showDrinkPicker;
-    const setShowPicker = isGender ? setShowGenderPicker : setShowDrinkPicker;
-    const displayValue = isGender ? value : options.find(opt => opt.value === value)?.label || value;
-
-    if (Platform.OS === 'ios') {
-      return (
-        <>
-          <TouchableOpacity
-            style={styles.pickerButton}
-            onPress={() => setShowPicker(true)}
-          >
-            <Text style={styles.pickerButtonText}>{displayValue}</Text>
-            <Ionicons name="chevron-down" size={20} color="#fff" />
-          </TouchableOpacity>
-
-          <Modal
-            visible={showPicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowPicker(false)}
-          >
-            <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
-              <View style={styles.pickerModalContainer}>
-                <View style={styles.pickerModalContent}>
-                  <View style={styles.pickerHeader}>
-                    <TouchableOpacity onPress={() => setShowPicker(false)}>
-                      <Text style={styles.pickerDoneButton}>Done</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View>
-                    <Picker
-                      selectedValue={value}
-                      onValueChange={(itemValue) => {
-                        setValue(itemValue);
-                        setShowPicker(false);
-                      }}
-                      style={styles.iosPicker}
-                    >
-                      {options.map((option) => (
-                        <Picker.Item
-                          key={option.value}
-                          label={option.label}
-                          value={option.value}
-                          color="#000"
-                        />
-                      ))}
-                    </Picker>
-                  </View>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </Modal>
-        </>
-      );
-    }
-
-    return (
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={value}
-          onValueChange={(itemValue) => setValue(itemValue)}
-          style={[styles.picker, { color: '#fff' }]}
-          dropdownIconColor="#fff"
-          mode="dropdown"
-        >
-          {options.map((option) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-              style={{ backgroundColor: '#1a0b2e' }}
-              color="#fff"
-            />
-          ))}
-        </Picker>
-      </View>
-    );
   };
 
   const dismissKeyboard = () => {
@@ -142,7 +64,7 @@ export default function AddPlayerModal({ visible, onClose, onAdd }: AddPlayerMod
     >
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
         <View style={styles.centeredView}>
-          <View style={[styles.modalView, { elevation: 0 }]}>
+          <View style={styles.modalView}>
             <View style={styles.header}>
               <Text style={styles.title}>Add a Player</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -152,57 +74,45 @@ export default function AddPlayerModal({ visible, onClose, onAdd }: AddPlayerMod
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Name</Text>
-                <TextInput
-                  style={styles.input}
+                <FormField
+                  label="Name"
                   placeholder="Enter the player's name"
-                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
                   value={name}
                   onChangeText={setName}
-                  returnKeyType="done"
-                  onSubmitEditing={dismissKeyboard}
-                  blurOnSubmit={true}
+                  style={styles.input}
                 />
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Gender</Text>
-                {renderPicker('gender')}
+                <CustomPicker
+                  options={GENDER_OPTIONS}
+                  value={gender}
+                  onValueChange={setGender}
+                />
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>What are you drinking?</Text>
-                {renderPicker('drink')}
+                <CustomPicker
+                  options={DRINK_OPTIONS}
+                  value={drink}
+                  onValueChange={setDrink}
+                />
               </View>
 
               <View style={styles.switchContainer}>
-               <Text style={styles.label}>Are you single?</Text>
-                <View style={styles.switchGroup}>
-                  <Switch
-                    value={single}
-                    onValueChange={(value) => {
-                      if (value) setSingle(true);
-                    }}
-                    trackColor={{ false: '#3a3a3a', true: '#00F5A0' }}
-                    thumbColor={single ? '#fff' : '#f4f3f4'}
-                  />
-                  <Text style={[styles.switchLabel, single && styles.activeLabel]}>
-                    Yes - You will get spicy challenges with other players
-                  </Text>
-                </View>
-                <View style={styles.switchGroup}>
-                  <Switch
-                    value={!single}
-                    onValueChange={(value) => {
-                      if (value) setSingle(false);
-                    }}
-                    trackColor={{ false: '#3a3a3a', true: '#00F5A0' }}
-                    thumbColor={!single ? '#fff' : '#f4f3f4'}
-                  />
-                  <Text style={[styles.switchLabel, !single && styles.activeLabel]}>
-                    No - You will not get spicy challenges with other players
-                  </Text>
-                </View>
+                <Text style={styles.label}>Are you single?</Text>
+                <CustomSwitch
+                  label="Yes - You will get spicy challenges with other players"
+                  value={single}
+                  onValueChange={(value) => setSingle(value)}
+                />
+                <CustomSwitch
+                  label="No - You will not get spicy challenges with other players"
+                  value={!single}
+                  onValueChange={(value) => setSingle(!value)}
+                />
               </View>
             </View>
 
@@ -230,7 +140,7 @@ export default function AddPlayerModal({ visible, onClose, onAdd }: AddPlayerMod
       </TouchableWithoutFeedback>
     </Modal>
   );
-}
+};
 
 const styles = StyleSheet.create({
   centeredView: {
@@ -246,20 +156,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     width: '100%',
-    ...Platform.select({
-      android: {
-        elevation: 0,
-      },
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-    }),
   },
   header: {
     flexDirection: 'row',
@@ -268,111 +164,50 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
+    color: '#00F5A0',
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
   },
   closeButton: {
-    padding: 5,
+    padding: 8,
   },
   form: {
-    gap: 20,
-  },
-  inputGroup: {
     marginBottom: 20,
   },
+  inputGroup: {
+    marginBottom: 16,
+  },
   label: {
-    color: '#fff',
+    color: '#00F5A0',
     fontSize: 16,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#2D1B69',
-    borderRadius: 10,
-    padding: Platform.OS === 'ios' ? 15 : 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    padding: 12,
     color: '#fff',
     fontSize: 16,
-  },
-  pickerButton: {
-    backgroundColor: '#2D1B69',
-    borderRadius: 10,
-    padding: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pickerButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  pickerContainer: {
-    backgroundColor: '#2D1B69',
-    borderRadius: 10,
-  },
-  picker: {
-    backgroundColor: 'transparent',
-    color: '#fff',
-  },
-  pickerModalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  pickerModalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 20,
-  },
-  pickerHeader: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    padding: 15,
-    alignItems: 'flex-end',
-  },
-  pickerDoneButton: {
-    color: '#007AFF',
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  iosPicker: {
-    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 245, 160, 0.3)',
   },
   switchContainer: {
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  switchGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    paddingRight: 20,
-  },
-  switchLabel: {
-    color: 'rgba(255, 255, 255, 0.5)',
-    fontSize: 14,
-    marginLeft: 15,
-    flex: 1,
-  },
-  activeLabel: {
-    color: '#fff',
+    marginTop: 16,
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
+    gap: 12,
   },
   cancelButton: {
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
     padding: 12,
-    borderRadius: 10,
     alignItems: 'center',
   },
   addButton: {
-    flex: 1,
+    borderRadius: 8,
     padding: 12,
-    borderRadius: 10,
     alignItems: 'center',
   },
   disabledButton: {
@@ -384,3 +219,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default React.memo(AddPlayerModal);

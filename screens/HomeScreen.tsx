@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import AddPlayerModal from '../components/AddPlayerModal';
 
 interface Player {
@@ -188,31 +188,36 @@ export default function HomeScreen() {
                 <View style={styles.settingsContainer}>
                     <TouchableOpacity
                         style={styles.settingsBtn}
-                        onPress={() => setSettingsVisible(!settingsVisible)}
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            setSettingsVisible(!settingsVisible);
+                        }}
                     >
                         <Ionicons name="settings-outline" size={24} color="#fff" />
                     </TouchableOpacity>
                     {settingsVisible && (
-                        <View style={styles.dropdown}>
-                            <TouchableOpacity 
-                                style={styles.dropdownItem}
-                                onPress={() => {
-                                    setSettingsVisible(false);
-                                    setHowToPlayVisible(true);
-                                }}
-                            >
-                                <Text style={styles.dropdownText}>How to Play</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={styles.dropdownItem}
-                                onPress={() => {
-                                    setSettingsVisible(false);
-                                    setContactVisible(true);
-                                }}
-                            >
-                                <Text style={styles.dropdownText}>Contact Us</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                            <View style={styles.dropdown}>
+                                <TouchableOpacity
+                                    style={styles.dropdownItem}
+                                    onPress={() => {
+                                        setSettingsVisible(false);
+                                        setHowToPlayVisible(true);
+                                    }}
+                                >
+                                    <Text style={styles.dropdownText}>How to Play</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.dropdownItem}
+                                    onPress={() => {
+                                        setSettingsVisible(false);
+                                        setContactVisible(true);
+                                    }}
+                                >
+                                    <Text style={styles.dropdownText}>Contact Us</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableWithoutFeedback>
                     )}
                 </View>
             </View>
@@ -222,19 +227,23 @@ export default function HomeScreen() {
                 {/* Players Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Players</Text>
-                    <FlatList
-                        data={players}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <View style={styles.playerCard}>
-                                <Text style={styles.playerName}>{item.name}</Text>
-                                <TouchableOpacity onPress={() => removePlayer(item.id)}>
-                                    <Ionicons name="trash-outline" size={20} color="#fff" />
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                        style={styles.playerList}
-                    />
+                    <View style={styles.listContainer}>
+                        <ScrollView 
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.scrollContent}
+                            scrollEnabled={true}
+                            nestedScrollEnabled={true}
+                        >
+                            {players.map(item => (
+                                <View key={item.id} style={styles.playerCard}>
+                                    <Text style={styles.playerName}>{item.name}</Text>
+                                    <TouchableOpacity onPress={() => removePlayer(item.id)}>
+                                        <Ionicons name="trash-outline" size={20} color="#fff" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    </View>
                     
                     <TouchableOpacity onPress={() => setModalVisible(true)}>
                         <LinearGradient
@@ -249,7 +258,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* Game Mode Section */}
-                <View style={styles.section}>
+                <View style={[styles.section, { flex: 1 }]}>
                     <Text style={styles.sectionTitle}>Choose Your Mode</Text>
                     <View style={styles.modeContainer}>
                         <View style={styles.modeOption}>
@@ -281,7 +290,7 @@ export default function HomeScreen() {
                         </View>
                     </View>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         onPress={startGame}
                         disabled={players.length < 2 || loading}
                     >
@@ -327,7 +336,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#1a0b2e',
-        paddingTop: 20,
+        paddingTop: 35,
     },
     header: {
         flexDirection: 'row',
@@ -341,7 +350,7 @@ const styles = StyleSheet.create({
     mainContent: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingTop: 20,
+        paddingTop: 10,
     },
     logo: {
         width: 30,
@@ -351,7 +360,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#fff',
+        color: '#00F5A0',
     },
     settingsContainer: {
         position: 'absolute',
@@ -385,18 +394,26 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     dropdownText: {
-        color: '#fff',
+        color: '#00F5A0',
         fontSize: 16,
         textAlign: 'center',
     },
     section: {
-        flex: 1,
+        marginBottom: 20,
+    },
+    listContainer: {
+        height: 220,
+        backgroundColor: 'rgba(45, 27, 105, 0.3)',
+        borderRadius: 10,
+        marginBottom: 35,
+        overflow: 'hidden',
     },
     sectionTitle: {
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: '600',
-        color: '#fff',
+        color: '#00F5A0',
         marginBottom: 10,
+        alignSelf: 'center'
     },
     playerCard: {
         flexDirection: 'row',
@@ -408,12 +425,8 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     playerName: {
-        color: '#fff',
+        color: '#00F5A0',
         fontSize: 16,
-    },
-    playerList: {
-        flex: 1,
-        marginBottom: 10,
     },
     addButton: {
         padding: 12,
@@ -428,25 +441,28 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     modeContainer: {
-        marginBottom: 15,
+        marginBottom: 100,
     },
     modeOption: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
+        paddingRight: 10,
     },
     modeText: {
         color: '#fff',
         fontSize: 14,
         flex: 1,
-        paddingRight: 10,
     },
     startButton: {
-        padding: 12,
+        padding: 15,
         borderRadius: 10,
         alignItems: 'center',
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        position: 'absolute',
+        bottom: 40,
+        left: 20,
+        right: 20,
     },
     startButtonText: {
         color: '#fff',
@@ -455,5 +471,9 @@ const styles = StyleSheet.create({
     },
     disabledButton: {
         opacity: 0.5,
+    },
+    scrollContent: {
+        paddingVertical: 8,
+        paddingHorizontal: 8,
     },
 });
