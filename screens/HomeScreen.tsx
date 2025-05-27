@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import AddPlayerModal from '../components/AddPlayerModal';
 
 interface Player {
@@ -216,6 +216,15 @@ export default function HomeScreen() {
                                 >
                                     <Text style={styles.dropdownText}>Contact Us</Text>
                                 </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.dropdownItem}
+                                    onPress={() => {
+                                        const url = 'https://www.tipsytrials.com/policy';
+                                        Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+                                    }}
+                                >
+                                    <Text style={styles.dropdownText}>Privacy Policy</Text>
+                                </TouchableOpacity>
                             </View>
                         </TouchableWithoutFeedback>
                     )}
@@ -228,7 +237,7 @@ export default function HomeScreen() {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Players</Text>
                     <View style={styles.listContainer}>
-                        <ScrollView 
+                        <ScrollView
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={styles.scrollContent}
                             scrollEnabled={true}
@@ -244,7 +253,7 @@ export default function HomeScreen() {
                             ))}
                         </ScrollView>
                     </View>
-                    
+
                     <TouchableOpacity onPress={() => setModalVisible(true)}>
                         <LinearGradient
                             colors={['#00F5A0', '#00D9F5']}
@@ -448,6 +457,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingRight: 10,
+        paddingBottom: 10
     },
     modeText: {
         color: '#fff',
@@ -461,8 +471,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
         position: 'absolute',
         bottom: 40,
-        left: 20,
-        right: 20,
+        left: 5,
+        right: 5,
     },
     startButtonText: {
         color: '#fff',
