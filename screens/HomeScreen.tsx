@@ -36,35 +36,31 @@ export default function HomeScreen() {
     const { gameState, setGameState, loading, setLoading } = useGame();
 
     const fetchAllQuestions = async (): Promise<Question[]> => {
-        const pageSize = 1000;
+        const pageSize = 500;
         let from = 0;
-        let moreData = true;
-        const questionMap = new Map<string, Question>();
+        let allQuestions: Question[] = [];
 
-        while (moreData) {
-            const to = from + pageSize - 1;
-
+        while (true) {
             const { data, error } = await supabase
                 .from('questions')
                 .select('*')
-                .range(from, to)
                 .order('created_at', { ascending: false })
-                .order('id', { ascending: false });
+                .range(from, from + pageSize - 1);
 
             if (error) {
-                console.error('Failed to fetch questions:', error.message);
+                console.error('Supabase error:', error.message);
                 break;
             }
 
-            if (data && data.length > 0) {
-                data.forEach((q) => questionMap.set(q.id, q));
-                from += pageSize;
-            } else {
-                moreData = false;
-            }
+            if (!data || data.length === 0) break;
+
+            allQuestions = allQuestions.concat(data);
+            from += pageSize;
+
+            if (from > 5000) break;
         }
 
-        return Array.from(questionMap.values());
+        return allQuestions;
     };
 
     useEffect(() => {
