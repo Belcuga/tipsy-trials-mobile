@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logo: {
-    width: 30,
-    height: 30,
+    width: 40,
+    height: 40,
     marginRight: 4,
   },
   titleText: {
