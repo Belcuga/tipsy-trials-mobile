@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Linking, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import AddPlayerModal from '../components/AddPlayerModal';
 
 interface Player {
@@ -53,13 +53,11 @@ export default function HomeScreen() {
             }
 
             if (!data || data.length === 0) break;
-
             allQuestions = allQuestions.concat(data);
             from += pageSize;
 
             if (from > 5000) break;
         }
-
         return allQuestions;
     };
 
@@ -158,7 +156,6 @@ export default function HomeScreen() {
             bonusReady: false,
             existingDifficulties: existingDifficulties
         };
-
         setGameState(gameState);
         router.push('/game' as any);
     };
@@ -171,9 +168,16 @@ export default function HomeScreen() {
     const removePlayer = (id: string) => {
         setPlayers((prev) => prev.filter((player) => player.id !== id));
     };
+    
 
     return (
         <SafeAreaView style={styles.safeArea}>
+                    {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#00D9F5" />
+          </View>
+        )}
+        {/* rest of your layout */}
             {/* Header */}
             <View style={styles.header}>
                 <Image
@@ -295,23 +299,21 @@ export default function HomeScreen() {
                         </View>
                     </View>
 
-                    <TouchableOpacity
-                        onPress={startGame}
-                        disabled={players.length < 2 || loading}
-                    >
+                    <Pressable onPress={startGame} style={({ pressed }) => [
+                        styles.startButton,
+                        pressed ? { opacity: 0.8 } : {},
+                        players.length < 2 ? { opacity: 0.5 } : {}
+                    ]} disabled={players.length < 2}>
                         <LinearGradient
                             colors={['#00F5A0', '#00D9F5']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
-                            style={[styles.startButton, (players.length < 2 || loading) && styles.disabledButton]}
+                            style={styles.startButtonGradient}
                         >
-                            {loading ? (
-                                <ActivityIndicator color="#fff" size="small" />
-                            ) : (
-                                <Text style={styles.startButtonText}>Start Game</Text>
-                            )}
+                            <Text style={styles.startButtonText}>Start Game</Text>
                         </LinearGradient>
-                    </TouchableOpacity>
+                    </Pressable>
+
                 </View>
             </View>
 
@@ -460,21 +462,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         flex: 1,
     },
-    startButton: {
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        position: 'absolute',
-        bottom: 40,
-        left: 5,
-        right: 5,
-    },
-    startButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
     disabledButton: {
         opacity: 0.5,
     },
@@ -482,4 +469,34 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 8,
     },
+    startButton: {
+        borderRadius: 25,
+        overflow: 'hidden',
+        marginTop: 20,
+        bottom: 60,
+        left: 5,
+        right: 5,
+    },
+    startButtonGradient: {
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        borderRadius: 25,
+        alignItems: 'center',
+    },
+    startButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
+      },
 });
