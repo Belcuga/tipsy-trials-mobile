@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "302489894129",
+    "project_id": "tipsy-trials-85245",
+    "storage_bucket": "tipsy-trials-85245.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:302489894129:android:7dbb411976fd2c1aecbd50",
+        "android_client_info": {
+          "package_name": "com.tipsytrials"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB08I9_eZjiVuRcrbogNoW8teMMxTTJM0o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

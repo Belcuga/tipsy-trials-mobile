@@ -95,9 +95,9 @@ export function showNumberOfSips(gameState: GameState, currentPlayer: GamePlayer
   if (gameState?.currentQuestion?.all_players) {
     const punishment = gameState.currentQuestion.punishment ?? 0;
     const sips = [
-      `Beer drinker - take ${Math.ceil(punishment * 1.5)} sips`,
-      `Wine drinker - take ${punishment * 1} sips`,
-      `Strong drinks - take ${Math.ceil(punishment * 0.5)} sips`,
+      `Beer drinker - take ${Math.ceil(punishment * 1.5)} ${Math.ceil(punishment * 1.5) === 1 ? 'sip' : 'sips'}`,
+      `Wine drinker - take ${punishment} ${punishment === 1 ? 'sip' : 'sips'}`,
+      `Strong drinks - take ${Math.ceil(punishment * 0.5)} ${Math.ceil(punishment * 0.5) === 1 ? 'sip' : 'sips'}`,
     ];
 
     if (gameState.currentQuestion.question.includes('Everyone')) {
@@ -115,6 +115,7 @@ export function showNumberOfSips(gameState: GameState, currentPlayer: GamePlayer
         ? 1
         : 0.5;
   const sips = Math.ceil((gameState?.currentQuestion?.punishment ?? 0) * multiplier);
-  const sipsText = gameState?.currentQuestion?.challenge ? [`Do or take ${sips} sips`] : [`Answer or take ${sips} sips`]
+  const sip = sips === 1 ? 'sip' : 'sips';
+  const sipsText = gameState?.currentQuestion?.challenge ? [`Do or take ${sips} ${sip}`] : [`Answer or take ${sips} ${sip}`]
   return sipsText;
 }

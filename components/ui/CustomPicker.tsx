@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import React, { useState } from 'react';
 import {
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 
 interface PickerOption {
@@ -66,13 +66,13 @@ const CustomPicker: React.FC<CustomPickerProps> = ({
                     setShowPicker(false);
                   }}
                   style={styles.iosPicker}
+                  itemStyle={styles.iosPickerItem}
                 >
                   {options.map((option) => (
                     <Picker.Item
                       key={option.value}
                       label={option.label}
                       value={option.value}
-                      color="#000"
                     />
                   ))}
                 </Picker>
@@ -90,7 +90,7 @@ const CustomPicker: React.FC<CustomPickerProps> = ({
         selectedValue={value}
         onValueChange={onValueChange}
         style={[styles.picker, { color: '#fff' }]}
-        dropdownIconColor="#00F5A0"
+        dropdownIconColor="#fff"
         mode="dropdown"
       >
         {options.map((option) => (
@@ -98,7 +98,7 @@ const CustomPicker: React.FC<CustomPickerProps> = ({
             key={option.value}
             label={option.label}
             value={option.value}
-            style={{ backgroundColor: '#1a0b2e' }}
+            style={styles.androidPickerItem}
             color="#fff"
           />
         ))}
@@ -112,8 +112,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
+    backgroundColor: '#2D1B69',
+    borderRadius: 10,
     padding: 12,
   },
   pickerButtonText: {
@@ -143,13 +143,21 @@ const styles = StyleSheet.create({
   iosPicker: {
     height: 215,
   },
+  iosPickerItem: {
+    color: '#fff',
+    backgroundColor: '#1a0b2e',
+  },
   pickerContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
+    backgroundColor: '#2D1B69',
+    borderRadius: 10,
   },
   picker: {
     height: 50,
   },
+  androidPickerItem: {
+    backgroundColor: '#1a0b2e',
+    color: '#fff',
+  }
 });
 
 export default React.memo(CustomPicker); 

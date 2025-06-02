@@ -52,7 +52,7 @@ export default function HowToPlayModal({ visible, onClose }: HowToPlayModalProps
               end={{ x: 1, y: 0 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>Got it!</Text>
+              <Text style={styles.buttonText}>Got it</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

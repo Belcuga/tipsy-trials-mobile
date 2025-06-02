@@ -1,17 +1,18 @@
+import { useGame } from '@/context/GameContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    Keyboard,
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Keyboard,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
-import CustomPicker from './ui/CustomPicker';
+import CustomStyledPicker from './ui/CustomStyledPicker';
 import CustomSwitch from './ui/CustomSwitch';
 import FormField from './ui/FormField';
 
@@ -37,6 +38,8 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ visible, onClose, onAdd
   const [gender, setGender] = useState('Male');
   const [drink, setDrink] = useState('Beer');
   const [single, setSingle] = useState(false);
+  const { gameState } = useGame();
+  const [duplicateName, setDuplicateName] = useState<boolean>(false);
 
   const handleAdd = () => {
     if (!name.trim()) return;
@@ -54,6 +57,11 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ visible, onClose, onAdd
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
+
+  useEffect(() => {
+    if (!gameState) return;
+    setDuplicateName(!!gameState?.players?.find(p => p.playerInfo.name === name))
+  }, [duplicateName, gameState, name]);
 
   return (
     <Modal
@@ -81,11 +89,13 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ visible, onClose, onAdd
                   onChangeText={setName}
                   style={styles.input}
                 />
+                {duplicateName && (
+                  <Text style={styles.errorText}>Name already taken.</Text>)}
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Gender</Text>
-                <CustomPicker
+                <CustomStyledPicker
+                  label="Gender"
                   options={GENDER_OPTIONS}
                   value={gender}
                   onValueChange={setGender}
@@ -93,8 +103,8 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ visible, onClose, onAdd
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>What are you drinking?</Text>
-                <CustomPicker
+                <CustomStyledPicker
+                  label="What are you drinking?"
                   options={DRINK_OPTIONS}
                   value={drink}
                   onValueChange={setDrink}
@@ -122,14 +132,14 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ visible, onClose, onAdd
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleAdd}
-                disabled={!name.trim()}
+                disabled={!name.trim() || duplicateName}
                 style={{ flex: 1 }}
               >
                 <LinearGradient
                   colors={['#00F5A0', '#00D9F5']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={[styles.addButton, !name.trim() && styles.disabledButton]}
+                  style={[styles.addButton, (!name.trim() || duplicateName) && styles.disabledButton]}
                 >
                   <Text style={styles.buttonText}>Add</Text>
                 </LinearGradient>
@@ -218,6 +228,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  errorText: {
+    color: 'red',
+  }
 });
 
 export default React.memo(AddPlayerModal);

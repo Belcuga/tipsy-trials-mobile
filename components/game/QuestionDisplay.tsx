@@ -14,7 +14,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.playerName}>{playerName === 'All players' ? `${playerName}' `  : `${playerName}'s` } Turn</Text>
+      <Text style={styles.playerName}>{playerName === 'All Players' ? `${playerName}'`  : `${playerName}'s` } Turn</Text>
       <View style={styles.questionContainer}>
         <Text style={styles.question}>{question}</Text>
         {sipsText.map((item, index) => (

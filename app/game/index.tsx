@@ -2,6 +2,7 @@ import ContactUsModal from '@/components/ContactUsModal';
 import GameControls from '@/components/game/GameControls';
 import QuestionDisplay from '@/components/game/QuestionDisplay';
 import HowToPlayModal from '@/components/HowToPlayModal';
+import LogoSvg from '@/components/ui/LogoSvg';
 import { useGame } from '@/context/GameContext';
 import { pickNextPlayer, pickNextQuestion, replacePlayerPlaceholder, showNumberOfSips, shuffleArray } from '@/lib/gameUtils';
 import { supabase } from '@/lib/supabase';
@@ -9,7 +10,7 @@ import { Question } from '@/types/question';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Image, Linking, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Dimensions, Linking, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -196,10 +197,7 @@ export default function GameScreen() {
             <Ionicons name="chevron-back" size={28} color="#fff" />
           </TouchableOpacity>
           <View style={styles.titleContainer}>
-            <Image
-              source={require('../../assets/images/logo.png')}
-              style={styles.logo}
-            />
+               <LogoSvg/>
             <Text style={styles.titleText}>Tipsy Trials</Text>
           </View>
           <View style={styles.settingsContainer}>

@@ -10,8 +10,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import AddPlayerModal from '../components/AddPlayerModal';
+import LogoSvg from '../components/ui/LogoSvg';
 
 interface Player {
     id: string;
@@ -134,7 +135,7 @@ export default function HomeScreen() {
         initializedPlayers.push({
             playerInfo: {
                 id: String(0),
-                name: 'All players',
+                name: 'All Players',
                 gender: Gender.None,
                 drink: Drink.None,
                 single: false,
@@ -153,7 +154,6 @@ export default function HomeScreen() {
             currentPlayerId: null,
             currentQuestion: null,
             roundNumber: 1,
-            bonusReady: false,
             existingDifficulties: existingDifficulties
         };
         setGameState(gameState);
@@ -165,25 +165,76 @@ export default function HomeScreen() {
     }
 
 
-    const removePlayer = (id: string) => {
-        setPlayers((prev) => prev.filter((player) => player.id !== id));
-    };
-    
+      const removePlayer = (id: string) => {
+    setPlayers((prev) => {
+      const removedPlayer = prev.find((player) => player.id === id);
+
+      if (!gameState) {
+        return prev.filter((player) => player.id !== id);
+      }
+
+      const updatedPlayers = gameState.players.filter(
+        (p) => p.playerInfo.id !== removedPlayer?.id
+      );
+
+      // Explicitly define all fields required by GameState
+      const updatedGameState: GameState = {
+        players: updatedPlayers,
+        questions: gameState.questions ?? [],
+        answeredQuestionIds: gameState.answeredQuestionIds ?? [],
+        roundPlayersLeft: [],
+        currentPlayerId: '0',
+        currentQuestion: gameState.currentQuestion ?? null,
+        roundNumber: gameState.roundNumber ?? 1,
+        existingDifficulties: gameState.existingDifficulties ?? [],
+      };
+      setGameState(updatedGameState);
+      return prev.filter((player) => player.id !== id);
+    });
+  };
+
+  const updatePlayers = (player: Player) => {
+    setPlayers((prev) => {
+      if (!gameState) {
+        return [...prev, player];
+      }
+      const gamePlayer = {
+        playerInfo: player,
+        skipCount: 1,
+        difficultyQueue: [],
+        difficultyIndex: 0,
+        totalQuestionsAnswered: 0
+      } as GamePlayer;
+      const updatedPlayers = [...gameState.players, gamePlayer]
+
+      const updatedGameState: GameState = {
+        players: updatedPlayers,
+        questions: gameState.questions ?? [],
+        answeredQuestionIds: gameState.answeredQuestionIds ?? [],
+        roundPlayersLeft: gameState.roundPlayersLeft,
+        currentPlayerId: gameState.currentPlayerId,
+        currentQuestion: gameState.currentQuestion ?? null,
+        roundNumber: gameState.roundNumber ?? 1,
+        existingDifficulties: gameState.existingDifficulties ?? [],
+      };
+
+      setGameState(updatedGameState);
+      return [...prev, player];
+    })
+  }
+
 
     return (
         <SafeAreaView style={styles.safeArea}>
-                    {loading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#00D9F5" />
-          </View>
-        )}
-        {/* rest of your layout */}
+            {loading && (
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color="#00D9F5" />
+                </View>
+            )}
+            {/* rest of your layout */}
             {/* Header */}
             <View style={styles.header}>
-                <Image
-                    source={require('../assets/images/logo.png')}
-                    style={styles.logo}
-                />
+                <LogoSvg/>
                 <Text style={styles.title}>Tipsy Trials</Text>
                 <View style={styles.settingsContainer}>
                     <TouchableOpacity
@@ -235,7 +286,7 @@ export default function HomeScreen() {
             <View style={styles.mainContent}>
                 {/* Players Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Players</Text>
+                    <Text style={styles.playersTitle}>Players</Text>
                     <View style={styles.listContainer}>
                         <ScrollView
                             showsVerticalScrollIndicator={false}
@@ -308,11 +359,13 @@ export default function HomeScreen() {
                             colors={['#00F5A0', '#00D9F5']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
-                            style={styles.startButtonGradient}
+                            style={styles.addButton}
                         >
-                            <Text style={styles.startButtonText}>Start Game</Text>
+                            <Text style={styles.addButtonText}>Start Game</Text>
                         </LinearGradient>
                     </Pressable>
+                    {players.length < 2 && (
+                    <Text style={styles.errorText}>Must have 2 players to start the game.</Text>)}
 
                 </View>
             </View>
@@ -321,7 +374,7 @@ export default function HomeScreen() {
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
                 onAdd={(player) => {
-                    setPlayers((prev) => [...prev, { ...player, id: Date.now().toString() }]);
+                    updatePlayers({ ...player, id: Date.now().toString() });
                     setModalVisible(false);
                 }}
             />
@@ -409,18 +462,26 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     listContainer: {
-        height: 220,
-        backgroundColor: 'rgba(45, 27, 105, 0.3)',
+        height: 230,
+        backgroundColor: '#1a0b2e',
         borderRadius: 10,
-        marginBottom: 35,
+        marginBottom: 20,
         overflow: 'hidden',
+    },
+    playersTitle: {
+        fontSize: 22,
+        fontWeight: '600',
+        color: '#00F5A0',
+        marginBottom: 10,
+        alignSelf: 'center',
     },
     sectionTitle: {
         fontSize: 22,
         fontWeight: '600',
         color: '#00F5A0',
         marginBottom: 10,
-        alignSelf: 'center'
+        alignSelf: 'center',
+        top: 50
     },
     playerCard: {
         flexDirection: 'row',
@@ -449,13 +510,13 @@ const styles = StyleSheet.create({
     },
     modeContainer: {
         marginBottom: 100,
+        top: 50
     },
     modeOption: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingRight: 10,
-        paddingBottom: 10
     },
     modeText: {
         color: '#fff',
@@ -470,12 +531,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
     },
     startButton: {
-        borderRadius: 25,
+        borderRadius: 0,
         overflow: 'hidden',
         marginTop: 20,
         bottom: 60,
-        left: 5,
-        right: 5,
     },
     startButtonGradient: {
         paddingVertical: 15,
@@ -498,5 +557,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
-      },
+    },
+    errorText: {
+        color: 'red',
+        bottom: 50
+    }
 });
